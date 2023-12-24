@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId, Admin } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.orneeg0.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const addManagement = client.db('taskDB').collection('adds')
 
@@ -33,19 +33,20 @@ async function run() {
             res.send(result)
         })
 
-        // app.get('/adds/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const result = await addManagement.findOne(query);
-        //     res.send(result)
-        // })
 
-        app.get('/adds', async (req, res) => {
-            const email = req.query.email;
-            const query = { email: email };
-            const result = await addManagement.find(query).toArray();
+          app.get('/adds/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await addManagement.findOne(query);
             res.send(result)
         })
+
+        // app.get('/adds/user', async (req, res) => {
+        //     const email = req.query.email;
+        //     const query = { email: email };
+        //     const result = await addManagement.find(query).toArray();
+        //     res.send(result)
+        // })
 
 
         app.post('/adds', async (req, res) => {
@@ -54,6 +55,7 @@ async function run() {
             res.send(result)
         })
 
+
         app.patch('/adds/:id', async (req, res) => {
             const item = req.body;
             console.log(item);
@@ -61,11 +63,10 @@ async function run() {
             const filter = { _id: new ObjectId(id) }
             const updateDoc = {
                 $set: {
-                    title: item.taskItem.title,
-                    priority: item.taskItem.priority,
-                    date: item.taskItem.date,
-                    description: item.taskItem.description,
-                    status: "onGoing"
+                    title: item.title,
+                    priority: item.priority,
+                    date: item.date,
+                    description: item.description,
                 }
             }
             console.log(updateDoc);
@@ -73,24 +74,30 @@ async function run() {
             res.send(result);
         })
 
-        // app.patch('/adds/onGoing/:id', async (req, res) => {
-        //     const item = req.body;
-        //     console.log(item);
-        //     const id = req.params.id;
-        //     const filter = { _id: new ObjectId(id) }
-        //     const updateDoc = {
-        //         $set: {
-        //             title: item.taskItem.title,
-        //             priority: item.taskItem.priority,
-        //             date: item.taskItem.date,
-        //             description: item.taskItem.description,
-        //             status: "onGoing"
-        //         }
-        //     }
-        //     console.log(updateDoc);
-        //     const result = await addManagement.updateOne(filter, updateDoc)
-        //     res.send(result);
-        // })
+
+        app.patch("/adds/ongoing/:id", async(req, res) => {
+            const id = req.params.id;
+            const filter = {_id: new ObjectId(id)};
+            const updateStatus = {
+                $set: {
+                    status: "onGoing"
+                }
+            }
+            const result = await addManagement.updateOne(filter, updateStatus)
+            res.send(result)
+        })
+
+        app.patch("/adds/complete/:id", async(req, res) => {
+            const id = req.params.id;
+            const filter = {_id: new ObjectId(id)};
+            const updateStatus = {
+                $set: {
+                    status: "complete"
+                }
+            }
+            const result = await addManagement.updateOne(filter, updateStatus)
+            res.send(result)
+        })
 
 
 
